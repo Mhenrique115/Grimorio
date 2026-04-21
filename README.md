@@ -1,6 +1,6 @@
 # Grimorio
 
-Sistema de fichas de RPG com frontend estático em HTML/CSS/JS e backend em Node.js + TypeScript + Express + Prisma.
+Sistema de fichas de RPG com frontend estatico em HTML/CSS/JS e backend em Node.js + TypeScript + Express + Prisma.
 
 ## Estrutura
 
@@ -10,7 +10,7 @@ backend/     API, autenticacao, regras de negocio e Prisma
 render.yaml  configuracao do backend para o Render
 ```
 
-## O que ja existe
+## O que o projeto entrega hoje
 
 - login com Supabase Auth
 - redefinicao de senha por email
@@ -22,12 +22,37 @@ render.yaml  configuracao do backend para o Render
 - frontend preparado para GitHub Pages
 - backend preparado para Render
 
-## Backend local
+## Como clonar e rodar localmente
 
-1. Entre em `backend`
-2. Instale as dependencias com `npm install`
+1. Clone o repositorio:
+
+```bash
+git clone https://github.com/Mhenrique115/Grimorio.git
+cd Grimorio
+```
+
+2. Entre em `backend` e instale as dependencias:
+
+```bash
+cd backend
+npm install
+```
+
 3. Crie `backend/.env` com base em `backend/.env.example`
-4. Rode `npm run dev`
+
+4. Gere o Prisma Client:
+
+```bash
+npm run db:generate
+```
+
+5. Suba o backend:
+
+```bash
+npm run dev
+```
+
+6. Abra o frontend com Live Server na pasta `frontend`
 
 ## Variaveis de ambiente do backend
 
@@ -171,9 +196,3 @@ Inclua pelo menos:
 - o favicon SVG do projeto fica em `frontend/favicon.svg`
 - `backend/.env` nao deve ir para o repositorio
 - `node_modules` e `dist` continuam ignorados
-
-## Proximos cuidados
-
-- rotacionar qualquer chave do Supabase ou senha de banco que tenha sido exposta
-- manter `SUPABASE_SERVICE_ROLE_KEY` apenas no backend
-- revisar `frontend/common.js` se trocar a URL publica do backend
