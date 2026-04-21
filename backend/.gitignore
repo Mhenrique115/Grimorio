@@ -1,0 +1,63 @@
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ===========================
+# Environment Variables
+# ===========================
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# ===========================
+# TypeScript
+# ===========================
+dist/
+build/
+*.js.map
+*.d.ts
+coverage/
+
+# ===========================
+# Prisma
+# ===========================
+prisma/migrations/**/migration_lock.toml
+
+# ===========================
+# VS Code
+# ===========================
+.vscode/
+!.vscode/extensions.json
+
+# ===========================
+# Sistema Operacional
+# ===========================
+# Windows
+Thumbs.db
+Desktop.ini
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Linux
+*~
+
+# ===========================
+# Logs
+# ===========================
+logs/
+*.log
+
+# ===========================
+# Misc
+# ===========================
+.cache/
+.temp/
+tmp/

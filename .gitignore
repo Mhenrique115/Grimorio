@@ -1,0 +1,22 @@
+# Root
+.vscode/
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Backend
+backend/node_modules/
+backend/dist/
+backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.production
+backend/.env.test
+backend/logs/
+backend/*.log
+backend/.cache/
+backend/.temp/
+backend/tmp/
+
+# Frontend
+frontend/.git/

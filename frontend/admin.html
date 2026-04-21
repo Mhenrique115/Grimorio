@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grimorio - Painel Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <h1>GRIMORIO</h1>
+      <span class="badge-admin">Administrador</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span style="font-size:0.8rem;color:rgba(240,230,211,0.4)" id="admin-email"></span>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab(event, 'templates')">Construtor</button>
+    <button class="nav-btn" onclick="switchTab(event, 'fichas')">Grimorios (Fichas)</button>
+    <button class="nav-btn" onclick="switchTab(event, 'usuarios')">Membros (Usuarios)</button>
+    <button class="nav-btn" onclick="switchTab(event, 'dados')">Giro de Dados</button>
+  </nav>
+</header>
+
+<div id="tab-templates" class="tab-content active">
+  <aside>
+    <div class="painel">
+      <div class="painel-header">
+        <span class="painel-title" id="template-form-title">Criar Campo</span>
+      </div>
+      <div class="painel-body">
+        <div id="template-form-status" class="form-status hidden"></div>
+
+        <label class="field-label" style="margin-top:0">Nome do Campo <small>(sem espacos, usado em formulas)</small></label>
+        <input id="f-nome" class="field-input" type="text" placeholder="Ex: Destreza" />
+
+        <label class="field-label">Label de Exibicao</label>
+        <input id="f-label" class="field-input" type="text" placeholder="Ex: Destreza" />
+
+        <label class="field-label">Tipo do Campo</label>
+        <select id="f-tipo" class="field-select" onchange="onTipoChange()">
+          <option value="Fixo">Fixo</option>
+          <option value="Calculado">Calculado</option>
+          <option value="Textarea">Area de Texto</option>
+          <option value="Checkbox">Checkbox</option>
+        </select>
+
+        <label class="field-label">Categoria</label>
+        <select id="f-categoria" class="field-select">
+          <option value="Caracteristica">Caracteristica</option>
+          <option value="Habilidade">Habilidade</option>
+          <option value="Inventario">Inventario</option>
+          <option value="Lore">Lore</option>
+          <option value="Status">Status</option>
+        </select>
+
+        <div id="formula-group">
+          <div class="formula-header">
+            <div>
+              <label class="field-label">Formula Matematica</label>
+              <p class="formula-help">Monte a equacao usando a lista de campos, a calculadora e funcoes como <code>round()</code>.</p>
+            </div>
+            <div id="formula-validation" class="formula-validation">Aguardando montagem</div>
+          </div>
+
+          <div class="calc-display" id="calc-display"></div>
+
+          <div class="builder-layout">
+            <div class="builder-panel">
+              <div class="builder-panel-header">Campos Numericos</div>
+              <div id="lista-nomes-campos" class="campos-grid"></div>
+            </div>
+
+            <div class="builder-panel">
+              <div class="builder-panel-header">Calculadora</div>
+              <div class="calc-functions">
+                <button type="button" class="calc-btn function" onclick="calcAddFunction('round')">round()</button>
+              </div>
+              <div class="calc-grid">
+                <button type="button" class="calc-btn action" onclick="calcAction('clear')">C</button>
+                <button type="button" class="calc-btn op" onclick="calcAddParen('(')">(</button>
+                <button type="button" class="calc-btn op" onclick="calcAddParen(')')">)</button>
+                <button type="button" class="calc-btn action" onclick="calcAction('back')">DEL</button>
+
+                <button type="button" class="calc-btn" onclick="calcAddDigit('7')">7</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('8')">8</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('9')">9</button>
+                <button type="button" class="calc-btn op" onclick="calcAddOperator('/')">/</button>
+
+                <button type="button" class="calc-btn" onclick="calcAddDigit('4')">4</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('5')">5</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('6')">6</button>
+                <button type="button" class="calc-btn op" onclick="calcAddOperator('*')">*</button>
+
+                <button type="button" class="calc-btn" onclick="calcAddDigit('1')">1</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('2')">2</button>
+                <button type="button" class="calc-btn" onclick="calcAddDigit('3')">3</button>
+                <button type="button" class="calc-btn op" onclick="calcAddOperator('-')">-</button>
+
+                <button type="button" class="calc-btn" onclick="calcAddDigit('0')">0</button>
+                <button type="button" class="calc-btn" onclick="calcAddDecimal()">.</button>
+                <button type="button" class="calc-btn op" style="grid-column: span 2;" onclick="calcAddOperator('+')">+</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button id="btn-template-submit" class="btn-primary" onclick="submitTemplate()">Forjar Campo</button>
+          <button id="btn-template-cancel" class="btn-secondary hidden" type="button" onclick="cancelarEdicao()">Cancelar edicao</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <main>
+    <div class="painel">
+      <div class="painel-header">
+        <span class="painel-title">Templates Ativos</span>
+        <div class="templates-toolbar">
+          <label class="toolbar-label" for="templates-filter-categoria">Categoria</label>
+          <select id="templates-filter-categoria" class="field-select toolbar-select" onchange="onCategoriaFilterChange()">
+            <option value="todas">Todas</option>
+            <option value="Caracteristica">Caracteristica</option>
+            <option value="Habilidade">Habilidade</option>
+            <option value="Inventario">Inventario</option>
+            <option value="Lore">Lore</option>
+            <option value="Status">Status</option>
+          </select>
+          <span class="painel-subtitle" id="templates-count">0 campos</span>
+        </div>
+      </div>
+      <div class="painel-body">
+        <div id="lista-templates" class="template-list template-list-scroll">Carregando...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div id="tab-fichas" class="tab-content">
+  <div class="painel">
+    <div class="painel-header"><span class="painel-title">Grimorios Registrados</span></div>
+    <div class="painel-body" style="overflow-x: auto;">
+      <table class="data-table">
+        <thead><tr><th>Personagem</th><th>Classe</th><th>Jogador</th><th>E-mail</th><th>Acoes</th></tr></thead>
+        <tbody id="lista-fichas-body"><tr><td colspan="5" style="text-align:center;">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="tab-usuarios" class="tab-content">
+  <div class="users-layout">
+    <aside>
+      <div class="painel">
+        <div class="painel-header">
+          <span class="painel-title">Criar Usuario</span>
+        </div>
+        <div class="painel-body">
+          <div id="user-form-status" class="form-status hidden"></div>
+
+          <label class="field-label" style="margin-top:0">E-mail</label>
+          <input id="u-email" class="field-input" type="email" placeholder="novo@grimorio.com" />
+
+          <label class="field-label">Cargo inicial</label>
+          <select id="u-role" class="field-select">
+            <option value="Jogador">Jogador</option>
+            <option value="Mestre">Mestre</option>
+            <option value="Admin">Admin</option>
+          </select>
+
+          <label class="field-checkbox">
+            <input id="u-send-reset" type="checkbox" checked />
+            <span>Enviar email de redefinicao de senha apos criar</span>
+          </label>
+
+          <div class="form-actions">
+            <button id="btn-user-submit" class="btn-primary" type="button" onclick="criarUsuario()">Criar Usuario</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="painel" style="margin-top:1.5rem;">
+        <div class="painel-header">
+          <span class="painel-title">Chat de Dados</span>
+        </div>
+        <div class="painel-body">
+          <div id="chat-config-status" class="form-status hidden"></div>
+
+          <label class="field-label" style="margin-top:0">Limpeza automatica</label>
+          <input id="chat-retention-days" class="field-input" type="number" min="1" max="30" />
+
+          <p class="helper-text">Os lancamentos mais antigos que esse prazo sao removidos automaticamente.</p>
+
+          <div class="form-actions">
+            <button id="btn-chat-config-submit" class="btn-secondary" type="button" onclick="salvarChatConfig()">Salvar configuracao</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="painel">
+        <div class="painel-header"><span class="painel-title">Aventureiros do Sistema</span></div>
+        <div class="painel-body" style="overflow-x: auto;">
+          <table class="data-table">
+            <thead><tr><th>E-mail</th><th>Data de Entrada</th><th>Cargo (Role)</th><th>Acoes</th></tr></thead>
+            <tbody id="lista-usuarios-body"><tr><td colspan="4" style="text-align:center;">Carregando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <div class="painel-note">
+    O Admin cria usuarios no Supabase e pode reenviar o email de redefinicao de senha sempre que precisar.
+  </div>
+  
+  <div class="painel-note warning">
+    Para essa funcionalidade funcionar, o backend precisa ter a variavel <code>SUPABASE_SERVICE_ROLE_KEY</code> configurada.
+  </div>
+</div>
+
+<div id="tab-dados" class="tab-content">
+  <div class="dice-layout">
+    <aside>
+      <div class="painel dice-master-panel">
+        <div class="painel-header">
+          <span class="painel-title">Giro de Dados</span>
+        </div>
+        <div class="painel-body">
+          <div class="dice-group">
+            <p class="field-label" style="margin-top:0">Multiplicador</p>
+            <div class="dice-grid small" id="dice-count-grid"></div>
+          </div>
+
+          <div class="dice-group">
+            <p class="field-label">Dados</p>
+            <div class="dice-grid" id="dice-faces-grid"></div>
+          </div>
+
+          <div class="dice-preview-box">
+            <p class="dice-preview-label">Rolagem selecionada</p>
+            <div id="dice-preview" class="dice-preview-value">D20</div>
+          </div>
+
+          <div class="dice-action-row">
+            <button id="btn-roll-dice" class="btn-dice-primary" type="button" onclick="girarDados()">Girar agora</button>
+            <button id="btn-clear-chat" class="btn-secondary" type="button" onclick="limparChatDados()">Limpar historico</button>
+          </div>
+
+          <div class="dice-config-box">
+            <p class="dice-config-label">Retencao automatica</p>
+            <p id="dice-retention-info" class="dice-config-value">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="painel">
+        <div class="painel-header">
+          <span class="painel-title">Historico Global de Rolagens</span>
+        </div>
+        <div class="dice-chat-body">
+          <div id="dice-chat-status" class="dice-chat-status hidden"></div>
+          <div id="dice-chat-list" class="dice-chat-list">
+            <div class="dice-empty-state">Aguardando a primeira rolagem do grupo.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div id="app-modal-overlay" class="app-modal-overlay hidden">
+  <div class="app-modal">
+    <div class="app-modal-title" id="app-modal-title">Aviso</div>
+    <div class="app-modal-message" id="app-modal-message"></div>
+    <div class="app-modal-actions" id="app-modal-actions">
+      <button type="button" class="btn-secondary" id="app-modal-cancel">Cancelar</button>
+      <button type="button" class="btn-primary" id="app-modal-confirm">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="common.js" defer></script>
+<script src="admin.js" defer></script>
+</body>
+</html>

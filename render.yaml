@@ -1,0 +1,26 @@
+# Render le este arquivo na raiz do repositorio.
+# O deploy continua sendo apenas do backend por causa de rootDir: backend.
+services:
+  - type: web
+    name: grimorio-backend
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install && npm run render-build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: FRONTEND_URL
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

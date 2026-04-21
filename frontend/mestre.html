@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grimorio - Painel do Mestre</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <h1>GRIMORIO</h1>
+      <span class="badge-admin">Mestre</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem;">
+      <span style="font-size:0.8rem;color:rgba(240,230,211,0.4)" id="mestre-email"></span>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+    </div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-btn active" onclick="switchTab(event, 'fichas')">Grimorios (Fichas)</button>
+    <button class="nav-btn" onclick="switchTab(event, 'modelos')">Templates Ativos</button>
+    <button class="nav-btn" onclick="switchTab(event, 'dados')">Giro de Dados</button>
+  </nav>
+</header>
+
+<div id="tab-fichas" class="tab-content active">
+  <div class="painel">
+    <div class="painel-header">
+      <span class="painel-title">Fichas Registradas</span>
+      <span class="painel-subtitle" id="fichas-count">0 fichas</span>
+    </div>
+    <div class="painel-body" style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Personagem</th>
+            <th>Classe</th>
+            <th>Jogador</th>
+            <th>E-mail</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="lista-fichas-body">
+          <tr><td colspan="5" style="text-align:center;">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="tab-modelos" class="tab-content">
+  <div class="painel">
+    <div class="painel-header">
+      <span class="painel-title">Templates Ativos</span>
+      <span class="painel-subtitle" id="templates-count">0 campos</span>
+    </div>
+    <div class="painel-body">
+      <div class="mestre-templates-shell">
+        <div id="lista-templates" class="template-list mestre-template-list">Carregando...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-dados" class="tab-content">
+  <div class="dice-layout">
+    <aside>
+      <div class="painel dice-master-panel">
+        <div class="painel-header">
+          <span class="painel-title">Giro de Dados</span>
+        </div>
+        <div class="painel-body">
+          <div class="dice-group">
+            <p class="field-label" style="margin-top:0">Multiplicador</p>
+            <div class="dice-grid small" id="dice-count-grid"></div>
+          </div>
+
+          <div class="dice-group">
+            <p class="field-label">Dados</p>
+            <div class="dice-grid" id="dice-faces-grid"></div>
+          </div>
+
+          <div class="dice-preview-box">
+            <p class="dice-preview-label">Rolagem selecionada</p>
+            <div id="dice-preview" class="dice-preview-value">D20</div>
+          </div>
+
+          <div class="dice-action-row">
+            <button id="btn-roll-dice" class="btn-dice-primary" type="button" onclick="girarDados()">Girar agora</button>
+          </div>
+
+          <div class="dice-config-box">
+            <p class="dice-config-label">Retencao automatica</p>
+            <p id="dice-retention-info" class="dice-config-value">Carregando...</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="painel">
+        <div class="painel-header">
+          <span class="painel-title">Historico Global de Rolagens</span>
+        </div>
+        <div class="dice-chat-body">
+          <div id="dice-chat-status" class="dice-chat-status hidden"></div>
+          <div id="dice-chat-list" class="dice-chat-list">
+            <div class="dice-empty-state">Aguardando a primeira rolagem do grupo.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="common.js" defer></script>
+<script src="mestre.js" defer></script>
+</body>
+</html>

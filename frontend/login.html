@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grimorio - Sistema de Fichas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            parchment: '#f0e6d3',
+            ink: '#1a1208',
+            sepia: '#8b6914',
+            blood: '#8b1a1a',
+            ash: '#2c2620',
+            ember: '#c9762a',
+          },
+          fontFamily: {
+            display: ['Cinzel', 'serif'],
+            body: ['Crimson Pro', 'serif'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="login.css">
+</head>
+<body>
+  <div class="w-full max-w-md px-4">
+    <div class="text-center mb-10 fade-up">
+      <div class="text-5xl mb-3" style="filter: drop-shadow(0 0 12px rgba(201,118,42,0.4))">⚔️</div>
+      <h1 class="font-display text-3xl text-parchment tracking-widest mb-1">GRIMORIO</h1>
+      <p class="text-sm tracking-[0.3em] uppercase" style="color: rgba(139,105,20,0.7)">Sistema de Fichas</p>
+    </div>
+
+    <div class="rune-border fade-up-2">
+      <div style="background: rgba(18,14,9,0.95); padding: 2.5rem;">
+        <div class="divider-rune mb-8">
+          <span style="font-size: 0.7rem; letter-spacing: 0.2em; color: rgba(139,105,20,0.6)">IDENTIFICACAO DO AVENTUREIRO</span>
+        </div>
+
+        <div id="status-msg" class="hidden rounded px-4 py-3 mb-6 text-sm font-body"></div>
+
+        <div id="login-form">
+          <div class="mb-5">
+            <label class="block text-xs tracking-[0.2em] uppercase mb-2" style="color: rgba(139,105,20,0.8); font-family: 'Cinzel', serif;">E-mail</label>
+            <input id="email" type="email" placeholder="seu@email.com" class="input-rpg w-full px-4 py-3 rounded" autocomplete="email" />
+          </div>
+
+          <div class="mb-8">
+            <label class="block text-xs tracking-[0.2em] uppercase mb-2" style="color: rgba(139,105,20,0.8); font-family: 'Cinzel', serif;">Senha</label>
+            <input id="senha" type="password" placeholder="••••••••" class="input-rpg w-full px-4 py-3 rounded" autocomplete="current-password" />
+          </div>
+
+          <div class="flex justify-end mb-6">
+            <button id="btn-esqueci-senha" type="button" class="action-link" onclick="handleForgotPassword()">
+              Esqueci minha senha
+            </button>
+          </div>
+
+          <button id="btn-entrar" class="btn-rpg w-full py-4 rounded cursor-pointer" onclick="handleLogin()">Adentrar o Grimorio</button>
+        </div>
+
+        <div class="divider-rune mt-8">
+          <span style="font-size: 0.65rem; letter-spacing: 0.15em; color: rgba(139,105,20,0.4)">Sem acesso? Consulte o Mestre.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-center mt-6 fade-up-3" style="font-size: 0.7rem; letter-spacing: 0.15em; color: rgba(139,105,20,0.3); text-transform: uppercase;">
+      Sistema Server-Authoritative v1.0
+    </p>
+  </div>
+
+  <script src="login.js" defer></script>
+</body>
+</html>

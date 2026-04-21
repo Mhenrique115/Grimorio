@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grimorio - Ficha do Personagem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="ficha.css">
+</head>
+<body>
+
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Consultando o Grimorio...</p>
+</div>
+
+<div id="toast"></div>
+
+<header>
+  <h1>⚔ GRIMORIO</h1>
+  <div class="user-badge">
+    <span id="user-email-display"></span>
+    <button id="btn-voltar" class="btn-logout" style="display: none;" onclick="voltarPainel()">Voltar ao Painel</button>
+    <button class="btn-logout" onclick="logout()">Sair</button>
+  </div>
+</header>
+
+<main class="ficha-container" id="ficha-main" style="display:none;">
+  <div class="ficha-tabs">
+    <button class="ficha-tab-btn active" data-tab-target="ficha" onclick="switchFichaTab('ficha')">Ficha</button>
+    <button class="ficha-tab-btn" data-tab-target="dados" onclick="switchFichaTab('dados')">Giro de Dados</button>
+  </div>
+
+  <section id="tab-ficha" class="ficha-tab-panel active">
+    <div class="cabecalho-ficha">
+      <p class="cabecalho-title">Identificacao do Personagem</p>
+      <div class="cabecalho-grid" id="cabecalho-campos"></div>
+    </div>
+
+    <div id="secoes-dinamicas"></div>
+  </section>
+
+  <section id="tab-dados" class="ficha-tab-panel">
+    <div class="dice-layout">
+      <aside>
+        <div class="cabecalho-ficha dice-panel">
+          <p class="cabecalho-title">Giro de Dados</p>
+
+          <div class="dice-group">
+            <p class="campo-label">Multiplicador</p>
+            <div class="dice-grid small" id="dice-count-grid"></div>
+          </div>
+
+          <div class="dice-group">
+            <p class="campo-label">Dados</p>
+            <div class="dice-grid" id="dice-faces-grid"></div>
+          </div>
+
+          <div class="dice-preview-box">
+            <p class="dice-preview-label">Rolagem selecionada</p>
+            <div id="dice-preview" class="dice-preview-value">D20</div>
+          </div>
+
+          <div class="dice-action-row">
+            <button id="btn-roll-dice" class="btn-dice-primary" type="button" onclick="girarDados()">Girar agora</button>
+            <button id="btn-clear-chat" class="btn-dice-secondary hidden" type="button" onclick="limparChatDados()">Limpar historico</button>
+          </div>
+
+          <div class="dice-config-box">
+            <p class="dice-config-label">Retencao automatica</p>
+            <p id="dice-retention-info" class="dice-config-value">Carregando...</p>
+          </div>
+        </div>
+      </aside>
+
+      <main>
+        <div class="secao">
+          <div class="secao-header">
+            <span style="color: var(--sepia)">✦</span>
+            <span class="secao-title">Historico Global de Rolagens</span>
+          </div>
+          <div class="dice-chat-body">
+            <div id="dice-chat-status" class="dice-chat-status hidden"></div>
+            <div id="dice-chat-list" class="dice-chat-list">
+              <div class="dice-empty-state">Aguardando a primeira rolagem do grupo.</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </section>
+</main>
+
+<script src="common.js" defer></script>
+<script src="ficha.js" defer></script>
+</body>
+</html>

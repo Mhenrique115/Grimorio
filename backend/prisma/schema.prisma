@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  Admin
+  Mestre
+  Jogador
+}
+
+enum TipoCampo {
+  Fixo
+  Calculado
+  Checkbox
+  Textarea
+}
+
+enum CategoriaCampo {
+  Caracteristica
+  Habilidade
+  Inventario
+  Lore
+  Status
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  role         Role       @default(Jogador)
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+  fichas       Ficha[]
+  diceRolls    DiceRoll[]
+
+  @@map("users")
+}
+
+model Ficha {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  nomePersonagem String       @map("nome_personagem")
+  dataNascimento DateTime?    @map("data_nascimento") @db.Date
+  idade          Int?
+  residencia     String?
+  classe         String?
+  nomeJogador    String?      @map("nome_jogador")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  valoresCampo   ValorCampo[]
+
+  @@index([userId])
+  @@unique([userId])
+  @@map("fichas")
+}
+
+model TemplateCampo {
+  id            String         @id @default(uuid()) @db.Uuid
+  nome          String         @unique
+  label         String
+  tipo          TipoCampo
+  categoria     CategoriaCampo
+  formulaLogica String?        @map("formula_logica")
+  descricao     String?
+  ordem         Int            @default(0)
+  ativo         Boolean        @default(true)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  valoresCampo  ValorCampo[]
+
+  @@index([tipo])
+  @@index([categoria])
+  @@map("template_campos")
+}
+
+model ValorCampo {
+  id            String        @id @default(uuid()) @db.Uuid
+  fichaId       String        @map("ficha_id") @db.Uuid
+  templateId    String        @map("template_id") @db.Uuid
+  valorBase     Int?          @map("valor_base")
+  valorMetade   Int?          @map("valor_metade")
+  valorQuinto   Int?          @map("valor_quinto")
+  valorTexto    String?       @map("valor_texto")
+  valorBooleano Boolean?      @map("valor_booleano")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+  ficha         Ficha         @relation(fields: [fichaId], references: [id], onDelete: Cascade)
+  template      TemplateCampo @relation(fields: [templateId], references: [id], onDelete: Restrict)
+
+  @@unique([fichaId, templateId], name: "ficha_campo_unico")
+  @@index([fichaId])
+  @@index([templateId])
+  @@map("valores_campo")
+}
+
+model DiceRoll {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  roleSnapshot Role     @map("role_snapshot")
+  quantidade   Int
+  faces        Int
+  resultados   Int[]
+  total        Int
+  expressao    String
+  createdAt    DateTime @default(now()) @map("created_at")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("dice_rolls")
+}
+
+model AppConfig {
+  id                String   @id
+  chatRetentionDays Int      @default(2) @map("chat_retention_days")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("app_config")
+}
