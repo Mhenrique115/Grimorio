@@ -573,10 +573,19 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   min-width: 120px;
 }
 
+.table-shell {
+  overflow-x: auto;
+  overflow-y: visible;
+}
+
 .data-table { width: 100%; min-width: 42rem; border-collapse: collapse; text-align: left; }
 .data-table th { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(139,105,20,0.7); border-bottom: 1px solid rgba(139,105,20,0.3); padding: 0.75rem; }
 .data-table td { padding: 0.75rem; border-bottom: 1px solid rgba(139,105,20,0.1); color: rgba(240,230,211,0.8); }
-.role-select { background: transparent; border: 1px solid rgba(139,105,20,0.5); color: var(--sepia); font-family: 'Cinzel', serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; outline: none; }
+.data-table td:last-child {
+  white-space: nowrap;
+}
+
+.role-select { background: transparent; border: 1px solid rgba(139,105,20,0.5); color: var(--sepia); font-family: 'Cinzel', serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; outline: none; max-width: 100%; }
 .role-select option { background: #1a1208; color: var(--parchment); }
 
 .painel-note {
@@ -865,6 +874,13 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
     padding: 0.8rem 1rem;
   }
 
+  .users-layout > aside,
+  .users-layout > main,
+  .dice-layout > aside,
+  .dice-layout > main {
+    min-width: 0;
+  }
+
   .templates-toolbar {
     width: 100%;
     align-items: stretch;
@@ -893,6 +909,64 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
     align-items: flex-start;
   }
 
+  .table-shell {
+    overflow: visible;
+  }
+
+  .data-table {
+    min-width: 0;
+  }
+
+  .data-table thead {
+    display: none;
+  }
+
+  .data-table tbody {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .data-table tr {
+    display: grid;
+    gap: 0.7rem;
+    padding: 0.95rem;
+    border: 1px solid rgba(139,105,20,0.18);
+    background: rgba(18, 13, 8, 0.96);
+  }
+
+  .data-table td {
+    display: grid;
+    gap: 0.25rem;
+    padding: 0;
+    border: 0;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .data-table td::before {
+    content: attr(data-label);
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(139,105,20,0.72);
+  }
+
+  .data-table td[data-label="Acoes"] {
+    margin-top: 0.25rem;
+  }
+
+  .data-table td[data-label="Acoes"] .btn-acao,
+  .data-table td[data-label="Acoes"] .btn-acao-soft,
+  .data-table td[data-label="Acoes"] .btn-acao-danger {
+    width: 100%;
+    text-align: center;
+  }
+
+  .data-table td[data-label="Cargo (Role)"] .role-select {
+    width: 100%;
+  }
+
   .dice-chat-top {
     align-items: flex-start;
     flex-wrap: wrap;
@@ -916,6 +990,18 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   .btn-dice-primary {
     font-size: 0.62rem;
     letter-spacing: 0.1em;
+  }
+
+  .tab-content {
+    padding-inline: 0.75rem;
+  }
+
+  .painel-body {
+    padding: 0.9rem;
+  }
+
+  .data-table tr {
+    padding: 0.85rem;
   }
 
   .calc-functions {

@@ -630,7 +630,13 @@ async function carregarFichas() {
     }
 
     data.forEach((f) => {
-      tbody.innerHTML += `<tr><td>${escapeHtml(f.nomePersonagem || 'Desconhecido')}</td><td>${escapeHtml(f.classe || '-')}</td><td>${escapeHtml(f.nomeJogador || '-')}</td><td>${escapeHtml(f.user.email)}</td><td><button class="btn-acao" onclick="abrirFicha('${escapeHtml(f.id)}')">Ver Ficha</button></td></tr>`;
+      tbody.innerHTML += `<tr>
+        <td data-label="Personagem">${escapeHtml(f.nomePersonagem || 'Desconhecido')}</td>
+        <td data-label="Classe">${escapeHtml(f.classe || '-')}</td>
+        <td data-label="Jogador">${escapeHtml(f.nomeJogador || '-')}</td>
+        <td data-label="E-mail">${escapeHtml(f.user.email)}</td>
+        <td data-label="Acoes"><button class="btn-acao" onclick="abrirFicha('${escapeHtml(f.id)}')">Ver Ficha</button></td>
+      </tr>`;
     });
   } catch (err) {
     console.error(err);
@@ -654,13 +660,13 @@ async function carregarUsuarios() {
 
     data.forEach((u) => {
       const dataFormatada = new Date(u.createdAt).toLocaleDateString('pt-BR');
-      tbody.innerHTML += `<tr><td>${escapeHtml(u.email)}</td><td>${escapeHtml(dataFormatada)}</td><td>
+      tbody.innerHTML += `<tr><td data-label="E-mail">${escapeHtml(u.email)}</td><td data-label="Data de Entrada">${escapeHtml(dataFormatada)}</td><td data-label="Cargo (Role)">
         <select class="role-select" onchange="mudarRole('${escapeHtml(u.id)}', this.value)" ${u.email === localStorage.getItem('rpg_email') ? 'disabled title="Nao pode mudar o proprio cargo"' : ''}>
           <option value="Jogador" ${u.role === 'Jogador' ? 'selected' : ''}>Jogador</option>
           <option value="Mestre" ${u.role === 'Mestre' ? 'selected' : ''}>Mestre</option>
           <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
         </select>
-      </td><td>
+      </td><td data-label="Acoes">
         <button class="btn-acao-soft" onclick="reenviarResetSenha('${escapeHtml(u.id)}', '${escapeHtml(u.email)}')">Enviar redefinicao</button>
       </td></tr>`;
     });

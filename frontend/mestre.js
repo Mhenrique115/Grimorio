@@ -95,11 +95,11 @@ async function carregarFichas() {
     data.forEach((ficha) => {
       tbody.innerHTML += `
         <tr>
-          <td>${escapeHtml(ficha.nomePersonagem || 'Desconhecido')}</td>
-          <td>${escapeHtml(ficha.classe || '-')}</td>
-          <td>${escapeHtml(ficha.nomeJogador || '-')}</td>
-          <td>${escapeHtml(ficha.user.email)}</td>
-          <td><button class="btn-acao" onclick="abrirFicha('${escapeHtml(ficha.id)}')">Ver Ficha</button></td>
+          <td data-label="Personagem">${escapeHtml(ficha.nomePersonagem || 'Desconhecido')}</td>
+          <td data-label="Classe">${escapeHtml(ficha.classe || '-')}</td>
+          <td data-label="Jogador">${escapeHtml(ficha.nomeJogador || '-')}</td>
+          <td data-label="E-mail">${escapeHtml(ficha.user.email)}</td>
+          <td data-label="Acoes"><button class="btn-acao" onclick="abrirFicha('${escapeHtml(ficha.id)}')">Ver Ficha</button></td>
         </tr>
       `;
     });
