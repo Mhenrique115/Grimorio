@@ -1,19 +1,31 @@
 # Grimorio
 
-Sistema de fichas de RPG com backend em Node.js + TypeScript + Express + Prisma e frontend em HTML/CSS/JS.
+Sistema de fichas de RPG com frontend estático em HTML/CSS/JS e backend em Node.js + TypeScript + Express + Prisma.
 
 ## Estrutura
 
 ```text
-frontend/   interface web publicada no GitHub Pages
-backend/    API, autenticacao, regras de negocio e Prisma
-render.yaml configuracao do backend para o Render
+frontend/    interface web publicada no GitHub Pages
+backend/     API, autenticacao, regras de negocio e Prisma
+render.yaml  configuracao do backend para o Render
 ```
+
+## O que ja existe
+
+- login com Supabase Auth
+- redefinicao de senha por email
+- papeis `Jogador`, `Mestre` e `Admin`
+- `1 ficha por usuario`
+- criacao automatica da ficha quando o usuario ainda nao tem uma
+- construtor de templates com campos fixos, texto, checkbox e calculados
+- chat global de giro de dados
+- frontend preparado para GitHub Pages
+- backend preparado para Render
 
 ## Backend local
 
 1. Entre em `backend`
-2. Instale dependencias com `npm install`
+2. Instale as dependencias com `npm install`
 3. Crie `backend/.env` com base em `backend/.env.example`
 4. Rode `npm run dev`
 
@@ -34,26 +46,34 @@ O backend tambem aceita:
 - `PORT`
 - `NODE_ENV`
 
-## Publicar no GitHub
+### Observacao sobre `FRONTEND_URL`
 
-Antes de subir:
+Em producao, use a URL do GitHub Pages.
 
-- mantenha `backend/.env` fora do repositório
-- confira que `node_modules` e `dist` continuam ignorados
-- mantenha `package-lock.json` versionado para deploy reproduzivel
+Exemplo:
 
-Fluxo comum:
-
-```bash
-git init
-git add .
-git commit -m "Prepare backend for Render deploy"
-git branch -M main
-git remote add origin SEU_REPOSITORIO_GITHUB
-git push -u origin main
+```env
+FRONTEND_URL=https://mhenrique115.github.io/Grimorio/
 ```
 
-## Deploy no Render
+Se quiser liberar producao e localhost ao mesmo tempo no CORS, pode usar mais de uma origem separada por virgula:
+
+```env
+FRONTEND_URL=https://mhenrique115.github.io/Grimorio/,http://localhost:5500,http://127.0.0.1:5500
+```
+
+## Scripts uteis do backend
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run db:generate
+npm run db:push
+npm run db:studio
+```
+
+## Deploy do backend no Render
 
 O projeto ja inclui `render.yaml` na raiz.
 
@@ -61,7 +81,7 @@ O projeto ja inclui `render.yaml` na raiz.
 
 1. No Render, escolha `New +`
 2. Selecione `Blueprint`
-3. Conecte o repositório do GitHub
+3. Conecte o repositorio do GitHub
 4. O Render vai ler `render.yaml`
 5. Preencha as variaveis marcadas com `sync: false`
 
@@ -70,13 +90,13 @@ O projeto ja inclui `render.yaml` na raiz.
 Se preferir criar manualmente:
 
 - Root Directory: `backend`
-- Build Command: `npm install && npm run render-build`
+- Build Command: `npm install --include=dev && npm run render-build`
 - Start Command: `npm start`
 - Health Check Path: `/health`
 
 ### Variaveis no Render
 
-Cadastre no painel do serviço:
+Cadastre no painel do servico:
 
 - `NODE_ENV=production`
 - `PORT=10000`
@@ -86,11 +106,9 @@ Cadastre no painel do serviço:
 - `SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-## Prisma no deploy
+### Build no Render
 
-O script `postinstall` roda `prisma generate` automaticamente.
-
-O build do Render usa:
+O deploy usa:
 
 ```bash
 npm run render-build
@@ -101,11 +119,15 @@ Esse script faz:
 1. `prisma generate`
 2. `tsc`
 
-Se depois voce quiser automatizar migracoes em deploy, a gente pode adicionar isso com cuidado. Por enquanto deixei sem `db push` automatico para nao correr risco no banco de producao.
+Nao foi configurado `db push` automatico em deploy.
 
 ## Frontend no GitHub Pages
 
-O repositório ja inclui o workflow `.github/workflows/deploy-pages.yml`.
+O repositorio inclui o workflow:
+
+```text
+.github/workflows/deploy-pages.yml
+```
 
 Esse workflow publica automaticamente o conteudo de `frontend/` no GitHub Pages a cada push na `main`.
 
@@ -113,24 +135,45 @@ Esse workflow publica automaticamente o conteudo de `frontend/` no GitHub Pages 
 
 1. No GitHub, abra `Settings`
 2. Entre em `Pages`
-3. Em `Source`, deixe `GitHub Actions`
-4. Faça um novo push na `main` se o deploy ainda nao tiver rodado
+3. Em `Source`, escolha `GitHub Actions`
+4. Aguarde o workflow rodar ou faca um novo push na `main`
 
-### URLs de producao
+## URL da API no frontend
 
-Quando o backend estiver publicado no Render, ajuste:
+O frontend usa `frontend/common.js` para decidir a API:
 
-- `backend` no Render com `FRONTEND_URL` apontando para a URL do GitHub Pages
-- `frontend/common.js` com a URL final do backend do Render se o nome do servico for diferente de `https://grimorio-backend.onrender.com`
+- `localhost` e `127.0.0.1` usam `http://localhost:3333`
+- producao usa `https://grimorio-backend.onrender.com`
 
-### Reset de senha em producao
+Se a URL publica do backend mudar, atualize `frontend/common.js`.
 
-No painel do Supabase, adicione a URL do GitHub Pages em:
+## Reset de senha em producao
 
-- `Authentication`
-- `URL Configuration`
+No painel do Supabase, ajuste:
+
+1. `Authentication`
+2. `URL Configuration`
+
+Configure:
+
+- `Site URL`
+- `Redirect URLs`
 
 Inclua pelo menos:
 
-- a URL raiz do Pages
-- `reset-password.html`
+- `https://mhenrique115.github.io/Grimorio/`
+- `https://mhenrique115.github.io/Grimorio/login.html`
+- `https://mhenrique115.github.io/Grimorio/reset-password.html`
+
+## Observacoes
+
+- o arquivo `reset-password.html` na raiz existe como compatibilidade para links antigos
+- o favicon SVG do projeto fica em `frontend/favicon.svg`
+- `backend/.env` nao deve ir para o repositorio
+- `node_modules` e `dist` continuam ignorados
+
+## Proximos cuidados
+
+- rotacionar qualquer chave do Supabase ou senha de banco que tenha sido exposta
+- manter `SUPABASE_SERVICE_ROLE_KEY` apenas no backend
+- revisar `frontend/common.js` se trocar a URL publica do backend

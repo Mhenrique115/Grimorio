@@ -1,21 +1,43 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
   <title id="title">Grimorio</title>
-  <desc id="desc">Livro arcano dourado com runa central.</desc>
+  <desc id="desc">Um livro antigo aberto em tons de marrom e amarelo, com um marcador dourado.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#2a1c0f" />
-      <stop offset="100%" stop-color="#120c07" />
+    <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f3ead8" />
+      <stop offset="100%" stop-color="#c7b08a" />
     </linearGradient>
     <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#d9ab4d" />
+      <stop offset="0%" stop-color="#f0c96a" />
       <stop offset="100%" stop-color="#8b6914" />
     </linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6e411b" />
+      <stop offset="100%" stop-color="#3d2109" />
+    </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="12" fill="#0b0906" />
-  <path d="M14 13.5h24c4.8 0 8 1.4 11 4.5V50c-3.1-2.2-6.1-3-10.2-3H14z" fill="url(#bg)" stroke="url(#gold)" stroke-width="2.2" />
-  <path d="M18 17h18.8c3.8 0 6.2 1 8.2 3v25.3c-2.1-1.4-4.4-2-7.8-2H18z" fill="none" stroke="rgba(240,230,211,0.18)" stroke-width="1" />
-  <path d="M24 21.5h8.3l5.6 6.4-5.6 6.4H24l5.5-6.4z" fill="none" stroke="#f0e6d3" stroke-width="2" stroke-linejoin="round" />
-  <path d="M24 42.5h16" stroke="#8b6914" stroke-width="2.2" stroke-linecap="round" />
-  <path d="M24 47h12" stroke="#8b6914" stroke-width="2.2" stroke-linecap="round" />
-  <path d="M14 13.5v33.5" stroke="#e0b96f" stroke-width="2.5" />
+
+  <rect width="64" height="64" rx="14" fill="#140d07" />
+
+  <path d="M 32 52 C 22 54 12 50 8 46 L 8 16 C 12 20 22 24 32 21 C 42 24 52 20 56 16 L 56 46 C 52 50 42 54 32 52 Z" fill="url(#cover)" />
+  <path d="M 32 50 C 23 52 14 48 10 45 L 10 18 C 14 21 23 25 32 23 C 41 25 50 21 54 18 L 54 45 C 50 48 41 52 32 50 Z" fill="none" stroke="url(#gold)" stroke-width="1.5" />
+  <path d="M 32 48 C 24 50 16 47 12 44 L 12 18 C 16 21 24 24 32 21 C 40 24 48 21 52 18 L 52 44 C 48 47 40 50 32 48 Z" fill="#a89069" />
+  <path d="M 31 22 L 31 48 C 24 50 16 47 12 44 L 12 18 C 16 21 24 24 31 22 Z" fill="url(#paper)" />
+  <path d="M 33 22 L 33 48 C 40 50 48 47 52 44 L 52 18 C 48 21 40 24 33 22 Z" fill="url(#paper)" />
+
+  <g stroke="#a89069" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <path d="M 16 25 C 20 27 25 28 28 27" />
+    <path d="M 16 30 C 20 32 25 33 28 32" />
+    <path d="M 16 35 C 20 37 25 38 28 37" />
+    <path d="M 16 40 C 20 42 25 43 28 42" />
+  </g>
+
+  <g stroke="#a89069" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <path d="M 48 25 C 44 27 39 28 36 27" />
+    <path d="M 48 30 C 44 32 39 33 36 32" />
+    <path d="M 48 35 C 44 37 39 38 36 37" />
+    <path d="M 48 40 C 44 42 39 43 36 42" />
+  </g>
+
+  <path d="M 32 21 L 35 23 L 35 55 L 32 52 L 29 55 L 29 23 Z" fill="url(#gold)" />
+  <path d="M 32 21 L 32 48" stroke="#8c7351" stroke-width="1" />
 </svg>
