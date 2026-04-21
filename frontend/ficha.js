@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3333';
+const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
 const FICHA_ID = localStorage.getItem('rpg_ficha_id');
 const TOKEN = localStorage.getItem('rpg_token');
 const ROLE = localStorage.getItem('rpg_role');

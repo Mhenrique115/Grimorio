@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3333';
+const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
 const TOKEN = localStorage.getItem('rpg_token');
 const ROLE = localStorage.getItem('rpg_role');
 const escapeHtml = window.AppUtils?.escapeHtml || ((value) => String(value ?? ''));

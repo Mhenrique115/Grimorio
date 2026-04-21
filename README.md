@@ -5,9 +5,9 @@ Sistema de fichas de RPG com backend em Node.js + TypeScript + Express + Prisma 
 ## Estrutura
 
 ```text
-frontend/   interface web
+frontend/   interface web publicada no GitHub Pages
 backend/    API, autenticacao, regras de negocio e Prisma
-render.yaml configuracao inicial para deploy no Render
+render.yaml configuracao do backend para o Render
 ```
 
 ## Backend local
@@ -102,3 +102,35 @@ Esse script faz:
 2. `tsc`
 
 Se depois voce quiser automatizar migracoes em deploy, a gente pode adicionar isso com cuidado. Por enquanto deixei sem `db push` automatico para nao correr risco no banco de producao.
+
+## Frontend no GitHub Pages
+
+O repositório ja inclui o workflow `.github/workflows/deploy-pages.yml`.
+
+Esse workflow publica automaticamente o conteudo de `frontend/` no GitHub Pages a cada push na `main`.
+
+### Como ativar
+
+1. No GitHub, abra `Settings`
+2. Entre em `Pages`
+3. Em `Source`, deixe `GitHub Actions`
+4. Faça um novo push na `main` se o deploy ainda nao tiver rodado
+
+### URLs de producao
+
+Quando o backend estiver publicado no Render, ajuste:
+
+- `backend` no Render com `FRONTEND_URL` apontando para a URL do GitHub Pages
+- `frontend/common.js` com a URL final do backend do Render se o nome do servico for diferente de `https://grimorio-backend.onrender.com`
+
+### Reset de senha em producao
+
+No painel do Supabase, adicione a URL do GitHub Pages em:
+
+- `Authentication`
+- `URL Configuration`
+
+Inclua pelo menos:
+
+- a URL raiz do Pages
+- `reset-password.html`

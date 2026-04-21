@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3333';
+const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
 
 const ROLE_REDIRECT = {
   Admin: 'admin.html',
