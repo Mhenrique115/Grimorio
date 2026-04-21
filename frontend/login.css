@@ -11,6 +11,7 @@ body {
   align-items: center;
   justify-content: center;
   font-family: 'Crimson Pro', serif;
+  padding: 1rem 0;
 }
 
 .rune-border { position: relative; }
@@ -60,4 +61,25 @@ body {
 
 .action-link:hover {
   color: #f0e6d3;
+}
+
+@media (max-width: 640px) {
+  body {
+    align-items: flex-start;
+    padding: 1.25rem 0.75rem 2rem;
+  }
+
+  .input-rpg {
+    font-size: 1rem;
+  }
+
+  .btn-rpg {
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+  }
+
+  .divider-rune {
+    gap: 0.6rem;
+    font-size: 0.95rem;
+  }
 }

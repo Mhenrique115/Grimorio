@@ -15,6 +15,7 @@ body {
   font-family: 'Crimson Pro', serif;
   font-size: 1.05rem;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 header {
@@ -29,9 +30,25 @@ header {
   gap: 1rem;
 }
 
-.header-top { display: flex; align-items: center; justify-content: space-between; }
+.header-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.header-group { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+.header-actions { display: flex; align-items: center; justify-content: flex-end; gap: 1rem; min-width: 0; }
+.header-email {
+  font-size: 0.8rem;
+  color: rgba(240,230,211,0.4);
+  max-width: min(26rem, 38vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em; }
-.nav-tabs { display: flex; gap: 1rem; border-top: 1px solid rgba(139,105,20,0.1); padding-top: 1rem; }
+.nav-tabs {
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid rgba(139,105,20,0.1);
+  padding-top: 1rem;
+  flex-wrap: wrap;
+}
 
 .nav-btn {
   background: transparent;
@@ -105,6 +122,7 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .painel-title {
@@ -227,6 +245,7 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .formula-help {
@@ -404,6 +423,7 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   justify-content: space-between;
   gap: 1rem;
   align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .template-card-title {
@@ -553,7 +573,7 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
   min-width: 120px;
 }
 
-.data-table { width: 100%; border-collapse: collapse; text-align: left; }
+.data-table { width: 100%; min-width: 42rem; border-collapse: collapse; text-align: left; }
 .data-table th { font-family: 'Cinzel', serif; font-size: 0.65rem; letter-spacing: 0.1em; color: rgba(139,105,20,0.7); border-bottom: 1px solid rgba(139,105,20,0.3); padding: 0.75rem; }
 .data-table td { padding: 0.75rem; border-bottom: 1px solid rgba(139,105,20,0.1); color: rgba(240,230,211,0.8); }
 .role-select { background: transparent; border: 1px solid rgba(139,105,20,0.5); color: var(--sepia); font-family: 'Cinzel', serif; font-size: 0.7rem; padding: 0.2rem 0.5rem; outline: none; }
@@ -793,5 +813,143 @@ header h1 { font-family: 'Cinzel', serif; font-size: 1rem; letter-spacing: 0.2em
 
   .mestre-template-list .template-card {
     padding: 0.9rem;
+  }
+}
+
+@media (max-width: 860px) {
+  header {
+    padding: 0.95rem 1rem;
+  }
+
+  .header-top {
+    align-items: flex-start;
+  }
+
+  .header-group,
+  .header-actions {
+    width: 100%;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .header-email {
+    max-width: 100%;
+    flex-basis: 100%;
+  }
+
+  .nav-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+    scrollbar-width: thin;
+  }
+
+  .nav-btn {
+    flex: 0 0 auto;
+  }
+
+  .tab-content {
+    padding: 1.25rem 0.9rem 2rem;
+  }
+
+  .painel-body,
+  .dice-chat-body {
+    padding: 1rem;
+  }
+
+  .painel-header {
+    padding: 0.8rem 1rem;
+  }
+
+  .templates-toolbar {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .toolbar-select {
+    width: 100%;
+  }
+
+  .formula-validation {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .template-actions {
+    width: 100%;
+  }
+
+  .template-actions .btn-acao-soft,
+  .template-actions .btn-acao-danger {
+    flex: 1 1 10rem;
+    text-align: center;
+  }
+
+  .field-checkbox {
+    align-items: flex-start;
+  }
+
+  .dice-chat-top {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  header h1 {
+    font-size: 0.9rem;
+    letter-spacing: 0.14em;
+  }
+
+  .badge-admin {
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+  }
+
+  .btn-logout,
+  .btn-primary,
+  .btn-secondary,
+  .btn-dice-primary {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+  }
+
+  .calc-functions {
+    flex-wrap: wrap;
+  }
+
+  .calc-grid {
+    gap: 0.35rem;
+  }
+
+  .calc-btn {
+    padding: 0.6rem 0.4rem;
+    font-size: 0.92rem;
+  }
+
+  .campos-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .template-card {
+    padding: 0.9rem;
+  }
+
+  .template-card-title {
+    font-size: 0.88rem;
+  }
+
+  .app-modal-actions {
+    flex-direction: column;
+  }
+
+  .app-modal-actions .btn-primary,
+  .app-modal-actions .btn-secondary {
+    width: 100%;
+    min-width: 0;
   }
 }
