@@ -5,6 +5,16 @@ function normalizarBaseUrl(url: string): string {
   return url.replace(/\/+$/, '');
 }
 
+function obterBasePathDaUrl(urlString: string): string {
+  try {
+    const url = new URL(urlString);
+    const pathname = url.pathname || '/';
+    return pathname === '/' ? '' : pathname.replace(/\/+$/, '');
+  } catch {
+    return '';
+  }
+}
+
 function construirBasePathDoReferer(req: Request): string {
   const referer = typeof req.headers.referer === 'string' ? req.headers.referer : '';
 
@@ -25,9 +35,8 @@ function construirBasePathDoReferer(req: Request): string {
 
 export function construirRedirectReset(req: Request): string {
   const origin = typeof req.headers.origin === 'string' ? req.headers.origin : '';
-  const fallback = env.FRONTEND_ORIGINS[0];
-  const baseUrl = normalizarBaseUrl(origin || fallback);
-  const basePath = construirBasePathDoReferer(req);
+  const fallbackUrl = env.FRONTEND_URL || env.FRONTEND_ORIGINS[0];
+  const baseUrl = normalizarBaseUrl(origin || fallbackUrl);
+  const basePath = construirBasePathDoReferer(req) || obterBasePathDaUrl(fallbackUrl);
   return `${baseUrl}${basePath}/reset-password.html`;
 }
-
