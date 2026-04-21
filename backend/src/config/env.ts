@@ -57,6 +57,13 @@ function getFrontendOrigins(frontendUrl?: string): string[] {
     return frontendUrl
       .split(',')
       .map((value) => value.trim())
+      .map((value) => {
+        try {
+          return new URL(value).origin;
+        } catch {
+          return value.replace(/\/+$/, '');
+        }
+      })
       .filter(Boolean);
   }
 
