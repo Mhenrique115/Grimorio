@@ -1,11 +1,7 @@
-const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
-const TOKEN = localStorage.getItem('rpg_token');
-const escapeHtml = window.AppUtils?.escapeHtml || ((value) => String(value ?? ''));
-
-if (!TOKEN || localStorage.getItem('rpg_role') !== 'Admin') {
-  alert('Acesso negado.');
-  window.location.href = 'login.html';
-}
+const { utils, storage, auth, http, dice, navigation } = window.RPGCore;
+const escapeHtml = utils.escapeHtml;
+const session = auth.requireRole(['Admin'], { useAlert: true });
+const TOKEN = session?.token;
 
 let templates = [];
 let formulaTokens = [];
@@ -16,14 +12,15 @@ let selectedDiceFaces = 20;
 let latestChatSignature = '';
 let chatPollTimer = null;
 
-const FUNCTION_NAMES = new Set(['round']);
-const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const DICE_FACES = [4, 6, 8, 10, 12, 14, 16, 18, 20];
+const FUNCTION_NAMES = new Set(['round', 'SE', 'E', 'OU']);
+const COMPARISON_OPERATORS = new Set(['<', '<=', '>', '>=', '=', '<>']);
+const ARITHMETIC_OPERATORS = new Set(['+', '-', '*', '/']);
+const DICE_COUNTS = dice.DICE_COUNTS;
+const DICE_FACES = dice.DICE_FACES;
 let modalResolver = null;
 
 function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
+  auth.logout();
 }
 
 function closeModal(result = false) {
@@ -77,20 +74,10 @@ function showConfirm(message, title = 'Confirmar') {
   });
 }
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
-      ...(options.headers || {}),
-    },
-  });
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erro');
-  return data;
-}
+const apiFetch = http.createApiClient({
+  tokenProvider: () => TOKEN,
+  onUnauthorized: () => auth.logout(),
+});
 
 function switchTab(e, tabId) {
   document.querySelectorAll('.tab-content').forEach((el) => el.classList.remove('active'));
@@ -170,6 +157,14 @@ function createFunctionToken(value) {
   return { type: 'function', value };
 }
 
+function createComparisonToken(value) {
+  return { type: 'comparison', value };
+}
+
+function createSeparatorToken() {
+  return { type: 'separator', value: ';' };
+}
+
 function getLastToken() {
   return formulaTokens[formulaTokens.length - 1] || null;
 }
@@ -177,8 +172,12 @@ function getLastToken() {
 function canStartValue() {
   const last = getLastToken();
   if (!last) return true;
-  if (last.type === 'operator') return true;
+  if (last.type === 'operator' || last.type === 'comparison' || last.type === 'separator') return true;
   return last.type === 'paren' && last.value === '(';
+}
+
+function isValueToken(token) {
+  return !!token && (token.type === 'number' || token.type === 'field' || (token.type === 'paren' && token.value === ')'));
 }
 
 function canCloseParen() {
@@ -190,12 +189,12 @@ function canCloseParen() {
   if (balance <= 0) return false;
 
   const last = getLastToken();
-  return !!last && (last.type === 'number' || last.type === 'field' || (last.type === 'paren' && last.value === ')'));
+  return isValueToken(last);
 }
 
 function endsWithValueToken() {
   const last = getLastToken();
-  return !!last && (last.type === 'number' || last.type === 'field' || (last.type === 'paren' && last.value === ')'));
+  return isValueToken(last);
 }
 
 function formulaHasBalancedParens() {
@@ -254,6 +253,7 @@ function renderCalcDisplay() {
     if (token.type === 'field') return `<span class="calc-token">${token.label}</span>`;
     if (token.type === 'number') return `<span class="calc-number">${token.value}</span>`;
     if (token.type === 'function') return `<span class="calc-token">${token.value}</span>`;
+    if (token.type === 'separator') return `<span class="calc-separator">${token.value}</span>`;
     return `<span class="calc-operator">${token.value}</span>`;
   }).join('');
 
@@ -264,11 +264,13 @@ function parseFormulaToTokens(formula) {
   if (!formula) return [];
 
   const availableFieldNames = new Set(getNumericTemplates().map((template) => template.nome));
-  const parts = formula.match(/(?:\d+\.\d+|\d+|[^\s()+\-*/]+|[()+\-*/])/g) || [];
+  const parts = formula.match(/(?:\d+\.\d+|\d+|<=|>=|<>|=|<|>|;|[A-Za-zÀ-ÿ_][\p{L}\p{N}_]*|[()+\-*/])/gu) || [];
 
   return parts.map((part) => {
     if (FUNCTION_NAMES.has(part)) return createFunctionToken(part);
-    if (['+', '-', '*', '/'].includes(part)) return createOperatorToken(part);
+    if (ARITHMETIC_OPERATORS.has(part)) return createOperatorToken(part);
+    if (COMPARISON_OPERATORS.has(part)) return createComparisonToken(part);
+    if (part === ';') return createSeparatorToken();
     if (part === '(' || part === ')') return createParenToken(part);
     if (!Number.isNaN(Number(part))) return createNumberToken(part);
     if (availableFieldNames.has(part)) return { type: 'field', value: part, label: part };
@@ -278,7 +280,7 @@ function parseFormulaToTokens(formula) {
 
 function calcAddFunction(functionName) {
   if (!canStartValue()) {
-    showFormStatus('Use uma funcao apenas no inicio da expressao ou depois de um operador.', 'error');
+    showFormStatus('Use uma funcao apenas no inicio da expressao ou depois de um operador, comparacao ou separador.', 'error');
     return;
   }
 
@@ -393,10 +395,48 @@ function calcAddOperator(operator) {
   renderCalcDisplay();
 }
 
+function calcAddComparison(operator) {
+  if (!endsWithValueToken()) {
+    showFormStatus('Complete um valor antes de inserir uma comparacao.', 'error');
+    return;
+  }
+
+  const last = getLastToken();
+  if (last?.type === 'comparison') {
+    showFormStatus('Nao e permitido usar duas comparacoes em sequencia.', 'error');
+    return;
+  }
+
+  hideFormStatus();
+  formulaTokens.push(createComparisonToken(operator));
+  renderCalcDisplay();
+}
+
+function calcAddSeparator() {
+  if (!endsWithValueToken()) {
+    showFormStatus('Use ";" apenas depois de uma condicao ou valor completo.', 'error');
+    return;
+  }
+
+  const balance = formulaTokens.reduce((total, token) => {
+    if (token.type !== 'paren') return total;
+    return total + (token.value === '(' ? 1 : -1);
+  }, 0);
+
+  if (balance <= 0) {
+    showFormStatus('Use ";" apenas dentro de funcoes como SE, E ou OU.', 'error');
+    return;
+  }
+
+  hideFormStatus();
+  formulaTokens.push(createSeparatorToken());
+  renderCalcDisplay();
+}
+
 function calcAddParen(paren) {
   if (paren === '(') {
     if (!canStartValue()) {
-      showFormStatus('Abra parenteses apenas no inicio da expressao ou depois de um operador.', 'error');
+      showFormStatus('Abra parenteses apenas no inicio da expressao ou depois de um operador, comparacao ou separador.', 'error');
       return;
     }
     hideFormStatus();
@@ -644,8 +684,8 @@ async function carregarFichas() {
 }
 
 function abrirFicha(id) {
-  localStorage.setItem('rpg_ficha_id', id);
-  window.location.href = 'ficha.html';
+  storage.persistFichaId(id);
+  navigation.goTo('ficha');
 }
 
 async function carregarUsuarios() {
@@ -661,7 +701,7 @@ async function carregarUsuarios() {
     data.forEach((u) => {
       const dataFormatada = new Date(u.createdAt).toLocaleDateString('pt-BR');
       tbody.innerHTML += `<tr><td data-label="E-mail">${escapeHtml(u.email)}</td><td data-label="Data de Entrada">${escapeHtml(dataFormatada)}</td><td data-label="Cargo (Role)">
-        <select class="role-select" onchange="mudarRole('${escapeHtml(u.id)}', this.value)" ${u.email === localStorage.getItem('rpg_email') ? 'disabled title="Nao pode mudar o proprio cargo"' : ''}>
+        <select class="role-select" onchange="mudarRole('${escapeHtml(u.id)}', this.value)" ${u.email === storage.getEmail() ? 'disabled title="Nao pode mudar o proprio cargo"' : ''}>
           <option value="Jogador" ${u.role === 'Jogador' ? 'selected' : ''}>Jogador</option>
           <option value="Mestre" ${u.role === 'Mestre' ? 'selected' : ''}>Mestre</option>
           <option value="Admin" ${u.role === 'Admin' ? 'selected' : ''}>Admin</option>
@@ -805,18 +845,8 @@ function hideDiceChatStatus() {
   el.className = 'dice-chat-status hidden';
 }
 
-function formatChatTime(dateValue) {
-  return new Date(dateValue).toLocaleString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-  });
-}
-
-function buildRollSignature(rolls) {
-  return rolls.map((roll) => `${roll.id}:${roll.total}`).join('|');
-}
+const formatChatTime = dice.formatChatTime;
+const buildRollSignature = dice.buildRollSignature;
 
 function renderDiceChat(rolls) {
   const list = document.getElementById('dice-chat-list');
@@ -938,7 +968,7 @@ async function reenviarResetSenha(id, email) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('admin-email').textContent = localStorage.getItem('rpg_email') || '';
+  document.getElementById('admin-email').textContent = storage.getEmail() || '';
   document.getElementById('app-modal-cancel').addEventListener('click', () => closeModal(false));
   document.getElementById('app-modal-confirm').addEventListener('click', () => closeModal(true));
   document.getElementById('app-modal-overlay').addEventListener('click', (event) => {

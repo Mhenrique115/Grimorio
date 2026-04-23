@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
-import { supabasePublic } from '../lib/supabase';
+import { getSupabaseAdmin, supabasePublic, supabaseVerifier } from '../lib/supabase';
 import { construirRedirectReset } from '../utils/frontend-url';
 import { garantirFichaDoUsuario } from '../services/ficha.service';
 
@@ -76,5 +76,43 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
 
   res.json({
     message: 'Email encontrado. Enviamos um link para redefinir a senha.',
+  });
+}
+
+export async function resetPassword(req: Request, res: Response): Promise<void> {
+  const accessToken = typeof req.body?.accessToken === 'string' ? req.body.accessToken.trim() : '';
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+
+  if (!accessToken || !password) {
+    res.status(400).json({ error: 'Token de recuperacao e nova senha sao obrigatorios.' });
+    return;
+  }
+
+  if (password.length < 6) {
+    res.status(400).json({ error: 'A nova senha precisa ter pelo menos 6 caracteres.' });
+    return;
+  }
+
+  const { data: userData, error: userError } = await supabaseVerifier.auth.getUser(accessToken);
+
+  if (userError || !userData.user) {
+    res.status(400).json({ error: 'O link de recuperacao e invalido ou expirou.' });
+    return;
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(userData.user.id, {
+    password,
+  });
+
+  if (updateError) {
+    res.status(400).json({
+      error: updateError.message || 'Nao foi possivel redefinir a senha.',
+    });
+    return;
+  }
+
+  res.json({
+    message: 'Senha redefinida com sucesso.',
   });
 }

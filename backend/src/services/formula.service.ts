@@ -44,9 +44,110 @@ function normalizarResultadoNumerico(resultado: unknown): number | null {
   return null;
 }
 
+function isIdentificadorChar(char: string): boolean {
+  return /[\p{L}\p{N}_]/u.test(char);
+}
+
+function encontrarFimParentesis(expressao: string, indiceAbertura: number): number {
+  let profundidade = 0;
+
+  for (let indice = indiceAbertura; indice < expressao.length; indice += 1) {
+    const char = expressao[indice];
+    if (char === '(') profundidade += 1;
+    if (char === ')') {
+      profundidade -= 1;
+      if (profundidade === 0) {
+        return indice;
+      }
+    }
+  }
+
+  return -1;
+}
+
+function dividirArgumentosTopo(expressao: string): string[] {
+  const partes: string[] = [];
+  let atual = '';
+  let profundidade = 0;
+
+  for (const char of expressao) {
+    if (char === '(') profundidade += 1;
+    if (char === ')') profundidade -= 1;
+
+    if (char === ';' && profundidade === 0) {
+      partes.push(atual.trim());
+      atual = '';
+      continue;
+    }
+
+    atual += char;
+  }
+
+  if (atual.trim() || expressao.endsWith(';')) {
+    partes.push(atual.trim());
+  }
+
+  return partes;
+}
+
+function traduzirFuncoesPortuguesas(expressao: string): string {
+  let resultado = '';
+  let indice = 0;
+
+  while (indice < expressao.length) {
+    const trecho = expressao.slice(indice);
+    const match = trecho.match(/^(SE|E|OU)\s*\(/);
+
+    if (match) {
+      const nomeFuncao = match[1];
+      const indiceAbertura = indice + match[0].lastIndexOf('(');
+      const indiceFechamento = encontrarFimParentesis(expressao, indiceAbertura);
+
+      if (indiceFechamento === -1) {
+        resultado += expressao[indice];
+        indice += 1;
+        continue;
+      }
+
+      const conteudoInterno = expressao.slice(indiceAbertura + 1, indiceFechamento);
+      const argumentos = dividirArgumentosTopo(conteudoInterno).map((parte) =>
+        traduzirFuncoesPortuguesas(parte)
+      );
+
+      if (nomeFuncao === 'SE') {
+        if (argumentos.length !== 3) {
+          throw new Error('SE() deve conter exatamente 3 argumentos.');
+        }
+
+        resultado += `((${argumentos[0]}) ? (${argumentos[1]}) : (${argumentos[2]}))`;
+      } else if (nomeFuncao === 'E') {
+        resultado += `and(${argumentos.join(', ')})`;
+      } else {
+        resultado += `or(${argumentos.join(', ')})`;
+      }
+
+      indice = indiceFechamento + 1;
+      continue;
+    }
+
+    resultado += expressao[indice];
+    indice += 1;
+  }
+
+  return resultado;
+}
+
+function traduzirFormulaParaMathjs(formula: string): string {
+  return traduzirFuncoesPortuguesas(formula)
+    .replace(/<>/g, '!=')
+    .replace(/(?<![<>=!])=(?![=])/g, '==')
+    .replace(/;/g, ',');
+}
+
 function validarAstSegura(formula: string): { valida: boolean; erro?: string } {
   try {
-    const ast = math.parse(formula) as MathNode;
+    const formulaTraduzida = traduzirFormulaParaMathjs(formula);
+    const ast = math.parse(formulaTraduzida) as MathNode;
 
     ast.traverse((node: any) => {
       if (node?.isFunctionNode) {
@@ -69,7 +170,8 @@ function executarFormula(formula: string, escopo: Record<string, number>): numbe
     throw new Error(erro || 'Formula invalida.');
   }
 
-  const ast = math.parse(formula) as MathNode;
+  const formulaTraduzida = traduzirFormulaParaMathjs(formula);
+  const ast = math.parse(formulaTraduzida) as MathNode;
   const resultado = ast.compile().evaluate(escopo);
   const numeroNormalizado = normalizarResultadoNumerico(resultado);
 

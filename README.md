@@ -6,6 +6,10 @@ Sistema de fichas de RPG com frontend estatico em HTML/CSS/JS e backend em Node.
 
 ```text
 frontend/    interface web publicada no GitHub Pages
+  assets/    icones e arquivos visuais compartilhados
+  styles/    estilos por pagina
+  core/      configuracao, auth, http, storage e utilitarios compartilhados
+  pages/     entradas por contexto: admin, mestre, ficha e auth
 backend/     API, autenticacao, regras de negocio e Prisma
 render.yaml  configuracao do backend para o Render
 ```
@@ -192,7 +196,6 @@ Inclua pelo menos:
 
 ## Observacoes
 
-- o arquivo `reset-password.html` na raiz existe como compatibilidade para links antigos
-- o favicon SVG do projeto fica em `frontend/favicon.svg`
+- o favicon SVG do projeto fica em `frontend/assets/icons/favicon.svg`
 - `backend/.env` nao deve ir para o repositorio
 - `node_modules` e `dist` continuam ignorados

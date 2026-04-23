@@ -1,45 +1,25 @@
-const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
-const TOKEN = localStorage.getItem('rpg_token');
-const ROLE = localStorage.getItem('rpg_role');
-const escapeHtml = window.AppUtils?.escapeHtml || ((value) => String(value ?? ''));
+const { utils, storage, auth, http, dice, navigation } = window.RPGCore;
+const escapeHtml = utils.escapeHtml;
+const session = auth.requireRole(['Mestre']);
+const TOKEN = session?.token;
+const ROLE = session?.role;
 
-const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const DICE_FACES = [4, 6, 8, 10, 12, 14, 16, 18, 20];
+const DICE_COUNTS = dice.DICE_COUNTS;
+const DICE_FACES = dice.DICE_FACES;
 
 let selectedDiceCount = 1;
 let selectedDiceFaces = 20;
 let latestChatSignature = '';
 let chatPollTimer = null;
 
-if (!TOKEN || ROLE !== 'Mestre') {
-  window.location.href = 'login.html';
-}
-
 function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
+  auth.logout();
 }
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
-      ...(options.headers || {}),
-    },
-  });
-
-  if (res.status === 401) {
-    localStorage.clear();
-    window.location.href = 'login.html';
-    throw new Error('Sessao expirada.');
-  }
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erro');
-  return data;
-}
+const apiFetch = http.createApiClient({
+  tokenProvider: () => TOKEN,
+  onUnauthorized: () => auth.logout(),
+});
 
 function switchTab(event, tabId) {
   document.querySelectorAll('.tab-content').forEach((el) => el.classList.remove('active'));
@@ -53,8 +33,8 @@ function switchTab(event, tabId) {
 }
 
 function abrirFicha(id) {
-  localStorage.setItem('rpg_ficha_id', id);
-  window.location.href = 'ficha.html';
+  storage.persistFichaId(id);
+  navigation.goTo('ficha');
 }
 
 function formatTemplateCard(template) {
@@ -184,18 +164,8 @@ function hideDiceChatStatus() {
   el.className = 'dice-chat-status hidden';
 }
 
-function formatChatTime(dateValue) {
-  return new Date(dateValue).toLocaleString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-  });
-}
-
-function buildRollSignature(rolls) {
-  return rolls.map((roll) => `${roll.id}:${roll.total}`).join('|');
-}
+const formatChatTime = dice.formatChatTime;
+const buildRollSignature = dice.buildRollSignature;
 
 function renderDiceChat(rolls) {
   const list = document.getElementById('dice-chat-list');
@@ -281,7 +251,7 @@ function iniciarPollingChat() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('mestre-email').textContent = localStorage.getItem('rpg_email') || '';
+  document.getElementById('mestre-email').textContent = storage.getEmail() || '';
   renderDiceControls();
   carregarFichas();
   carregarChatDados();

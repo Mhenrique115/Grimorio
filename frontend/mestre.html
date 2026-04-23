@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grimorio - Painel do Mestre</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
 <body>
 
@@ -120,7 +120,13 @@
   </div>
 </div>
 
-<script src="common.js" defer></script>
-<script src="mestre.js" defer></script>
+<script src="core/config.js" defer></script>
+<script src="core/utils.js" defer></script>
+<script src="core/storage.js" defer></script>
+<script src="core/auth.js" defer></script>
+<script src="core/http.js" defer></script>
+<script src="core/dice.js" defer></script>
+<script src="core/navigation.js" defer></script>
+<script src="pages/mestre/index.js" defer></script>
 </body>
 </html>

@@ -1,18 +1,10 @@
-const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
+const { config, storage, auth, navigation } = window.RPGCore;
+const API_BASE = config.API_BASE;
 
 const ROLE_REDIRECT = {
   Admin: 'admin.html',
   Mestre: 'mestre.html',
 };
-
-function persistFichaId(fichaId) {
-  if (fichaId) {
-    localStorage.setItem('rpg_ficha_id', fichaId);
-    return;
-  }
-
-  localStorage.removeItem('rpg_ficha_id');
-}
 
 function showMessage(msg, kind = 'error') {
   const el = document.getElementById('status-msg');
@@ -26,16 +18,7 @@ function hideMessage() {
 }
 
 function getRedirectForRole(role) {
-  if (ROLE_REDIRECT[role]) {
-    return ROLE_REDIRECT[role];
-  }
-
-  if (role === 'Jogador') {
-    const fichaId = localStorage.getItem('rpg_ficha_id');
-    return fichaId ? 'ficha.html' : null;
-  }
-
-  return null;
+  return auth.getRedirectForRole(role);
 }
 
 async function resolveJogadorFichaId(token) {
@@ -46,12 +29,12 @@ async function resolveJogadorFichaId(token) {
   });
 
   if (response.status === 404) {
-    persistFichaId(null);
+    storage.persistFichaId(null);
     return null;
   }
 
   if (response.status === 401) {
-    localStorage.clear();
+    storage.clearSession();
     return null;
   }
 
@@ -62,20 +45,20 @@ async function resolveJogadorFichaId(token) {
   }
 
   const fichaId = data?.data?.id ?? null;
-  persistFichaId(fichaId);
+  storage.persistFichaId(fichaId);
   return fichaId;
 }
 
 (async function checkExistingSession() {
-  const token = localStorage.getItem('rpg_token');
-  const role = localStorage.getItem('rpg_role');
+  const token = storage.getToken();
+  const role = storage.getRole();
   let destino = getRedirectForRole(role);
 
   if (token && role === 'Jogador' && !destino) {
     try {
       const fichaId = await resolveJogadorFichaId(token);
       if (fichaId) {
-        destino = 'ficha.html';
+        destino = 'ficha';
       }
     } catch (err) {
       console.error('Erro ao recuperar ficha do jogador:', err);
@@ -83,7 +66,7 @@ async function resolveJogadorFichaId(token) {
   }
 
   if (token && destino) {
-    window.location.replace(destino);
+    navigation.goTo(destino, { replace: true });
   }
 })();
 
@@ -163,7 +146,7 @@ async function handleLogin() {
     localStorage.setItem('rpg_role', data.user.role);
     localStorage.setItem('rpg_user_id', data.user.id);
     localStorage.setItem('rpg_email', data.user.email);
-    persistFichaId(data.fichaId);
+    storage.persistFichaId(data.fichaId);
 
     const destino = getRedirectForRole(data.user.role);
     if (!destino) {
@@ -171,7 +154,7 @@ async function handleLogin() {
       return;
     }
 
-    window.location.replace(destino);
+    navigation.goTo(destino, { replace: true });
   } catch (err) {
     console.error('Erro ao fazer login:', err);
     showMessage('Nao foi possivel ligar ao servidor. Tente novamente.', 'error');

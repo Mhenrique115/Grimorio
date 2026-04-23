@@ -9,7 +9,7 @@ import {
   requireJogador,
   requireMestre,
 } from './middlewares/auth.middleware';
-import { login, forgotPassword } from './controllers/auth.controller';
+import { login, forgotPassword, resetPassword } from './controllers/auth.controller';
 import {
   listarUsuarios,
   criarUsuario,
@@ -64,6 +64,7 @@ export function createApp() {
 
   app.post('/auth/login', login);
   app.post('/auth/forgot-password', forgotPassword);
+  app.post('/auth/reset-password', resetPassword);
 
   app.get('/users', authenticate, requireAdmin, listarUsuarios);
   app.post('/users', authenticate, requireAdmin, criarUsuario);

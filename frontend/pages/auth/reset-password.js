@@ -1,23 +1,6 @@
-const SUPABASE_URL = window.AppConfig?.SUPABASE_URL;
-const SUPABASE_ANON_KEY = window.AppConfig?.SUPABASE_ANON_KEY;
-
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    detectSessionInUrl: true,
-    persistSession: false,
-    autoRefreshToken: false,
-  },
-});
-
-let recoverySessionReady = false;
-
-function clearRpgSession() {
-  localStorage.removeItem('rpg_token');
-  localStorage.removeItem('rpg_role');
-  localStorage.removeItem('rpg_user_id');
-  localStorage.removeItem('rpg_email');
-  localStorage.removeItem('rpg_ficha_id');
-}
+const { config, storage, navigation } = window.RPGCore;
+const API_BASE = config.API_BASE;
+let recoveryAccessToken = '';
 
 function showStatus(message, kind = 'error') {
   const el = document.getElementById('status-msg');
@@ -32,21 +15,11 @@ function setLoading(loading) {
   btn.textContent = loading ? 'Salvando...' : 'Salvar nova senha';
 }
 
-function enableRecoverySession() {
-  if (recoverySessionReady) {
-    return;
-  }
-
-  recoverySessionReady = true;
-  showStatus('Link validado. Agora voce pode definir a nova senha.', 'success');
-  window.history.replaceState({}, document.title, window.location.pathname);
-}
-
 function exibirErroDoLink() {
   showStatus('O link de recuperacao e invalido ou expirou. Solicite um novo email para continuar.', 'error');
 }
 
-async function prepararRecuperacao() {
+function prepararRecuperacao() {
   const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const linkComErro = hashParams.get('error') || hashParams.get('error_code') || hashParams.get('error_description');
 
@@ -55,35 +28,17 @@ async function prepararRecuperacao() {
     return;
   }
 
-  showStatus('Validando o link de recuperacao...', 'info');
+  const accessToken = hashParams.get('access_token');
+  const tipo = hashParams.get('type');
 
-  supabaseClient.auth.onAuthStateChange((event, session) => {
-    if (event === 'PASSWORD_RECOVERY' || session) {
-      enableRecoverySession();
-    }
-  });
-
-  const { data, error } = await supabaseClient.auth.getSession();
-
-  if (error) {
+  if (!accessToken || tipo !== 'recovery') {
     exibirErroDoLink();
     return;
   }
 
-  if (data.session) {
-    enableRecoverySession();
-    return;
-  }
-
-  window.setTimeout(async () => {
-    const retry = await supabaseClient.auth.getSession();
-    if (retry.data.session) {
-      enableRecoverySession();
-      return;
-    }
-
-    exibirErroDoLink();
-  }, 600);
+  recoveryAccessToken = accessToken;
+  showStatus('Link validado. Agora voce pode definir a nova senha.', 'success');
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 async function handlePasswordReset(event) {
@@ -92,7 +47,7 @@ async function handlePasswordReset(event) {
   const novaSenha = document.getElementById('nova-senha').value;
   const confirmarSenha = document.getElementById('confirmar-senha').value;
 
-  if (!recoverySessionReady) {
+  if (!recoveryAccessToken) {
     showStatus('Abra esta pagina pelo link mais recente enviado para o seu email.', 'error');
     return;
   }
@@ -110,19 +65,27 @@ async function handlePasswordReset(event) {
   setLoading(true);
 
   try {
-    const { error } = await supabaseClient.auth.updateUser({ password: novaSenha });
+    const response = await fetch(`${API_BASE}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        accessToken: recoveryAccessToken,
+        password: novaSenha,
+      }),
+    });
 
-    if (error) {
-      showStatus(error.message || 'Nao foi possivel redefinir a senha.', 'error');
+    const data = await response.json();
+
+    if (!response.ok) {
+      showStatus(data.error || 'Nao foi possivel redefinir a senha.', 'error');
       return;
     }
 
-    clearRpgSession();
+    storage.clearSession();
     showStatus('Senha atualizada com sucesso. Voce ja pode entrar novamente.', 'success');
 
-    window.setTimeout(async () => {
-      await supabaseClient.auth.signOut();
-      window.location.replace('login.html');
+    window.setTimeout(() => {
+      navigation.goTo('login', { replace: true });
     }, 1600);
   } catch (err) {
     console.error('Erro ao redefinir senha:', err);

@@ -1,9 +1,10 @@
-const API_BASE = window.AppConfig?.API_BASE || 'http://localhost:3333';
-const FICHA_ID = localStorage.getItem('rpg_ficha_id');
-const TOKEN = localStorage.getItem('rpg_token');
-const ROLE = localStorage.getItem('rpg_role');
-const EMAIL = localStorage.getItem('rpg_email') || '';
-const escapeHtml = window.AppUtils?.escapeHtml || ((value) => String(value ?? ''));
+const { utils, storage, auth, http, dice, navigation } = window.RPGCore;
+const session = auth.requireRole(['Jogador', 'Mestre', 'Admin']);
+const FICHA_ID = storage.getFichaId();
+const TOKEN = session?.token;
+const ROLE = session?.role;
+const EMAIL = session?.email || '';
+const escapeHtml = utils.escapeHtml;
 
 const CATEGORIA_ICONES = {
   Caracteristica: '◇',
@@ -13,36 +14,29 @@ const CATEGORIA_ICONES = {
   Status: '◉',
 };
 
-const DICE_COUNTS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const DICE_FACES = [4, 6, 8, 10, 12, 14, 16, 18, 20];
+const DICE_COUNTS = dice.DICE_COUNTS;
+const DICE_FACES = dice.DICE_FACES;
 
 let selectedDiceCount = 1;
 let selectedDiceFaces = 20;
 let latestChatSignature = '';
 let chatPollTimer = null;
 let currentChatRetentionDays = 2;
-
-if (!TOKEN) window.location.href = 'login.html';
+let estadoCabecalho = {};
+const AUTOSAVE_DELAY_MS = 2000;
 
 function voltarPainel() {
-  localStorage.removeItem('rpg_ficha_id');
-  if (ROLE === 'Admin') window.location.href = 'admin.html';
-  else if (ROLE === 'Mestre') window.location.href = 'mestre.html';
-  else window.location.href = 'login.html';
+  storage.persistFichaId(null);
+  if (ROLE === 'Admin') navigation.goTo('admin');
+  else if (ROLE === 'Mestre') navigation.goTo('mestre');
+  else navigation.goTo('login');
 }
 
 function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
+  auth.logout();
 }
 
-function debounce(fn, ms = 500) {
-  let timer;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn.apply(this, args), ms);
-  };
-}
+const debounce = utils.debounce;
 
 let toastTimer;
 function showToast(msg, tipo = 'success') {
@@ -53,26 +47,10 @@ function showToast(msg, tipo = 'success') {
   toastTimer = setTimeout(() => { el.className = tipo; }, 2500);
 }
 
-async function apiFetch(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${TOKEN}`,
-      ...(options.headers || {}),
-    },
-  });
-
-  if (res.status === 401) {
-    localStorage.clear();
-    window.location.href = 'login.html';
-    throw new Error('Sessao expirada.');
-  }
-
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Erro na requisicao');
-  return data;
-}
+const apiFetch = http.createApiClient({
+  tokenProvider: () => TOKEN,
+  onUnauthorized: () => auth.logout(),
+});
 
 let estadoValores = {};
 
@@ -91,13 +69,22 @@ function switchFichaTab(tabId) {
 }
 
 function renderizarCabecalho(ficha) {
+  estadoCabecalho = {
+    nomePersonagem: ficha.nomePersonagem ?? '',
+    classe: ficha.classe ?? '',
+    residencia: ficha.residencia ?? '',
+    idade: ficha.idade ?? '',
+    nomeJogador: ficha.nomeJogador ?? '',
+    dataNascimento: ficha.dataNascimento?.split('T')[0] ?? '',
+  };
+
   const campos = [
-    { id: 'nomePersonagem', label: 'Nome do Personagem', valor: ficha.nomePersonagem, span: true },
-    { id: 'classe', label: 'Classe', valor: ficha.classe },
-    { id: 'residencia', label: 'Residencia', valor: ficha.residencia },
-    { id: 'idade', label: 'Idade', valor: ficha.idade, type: 'number' },
-    { id: 'nomeJogador', label: 'Nome do Jogador', valor: ficha.nomeJogador },
-    { id: 'dataNascimento', label: 'Nascimento', valor: ficha.dataNascimento?.split('T')[0], type: 'date' },
+    { id: 'nomePersonagem', label: 'Nome do Personagem', valor: estadoCabecalho.nomePersonagem, span: true },
+    { id: 'classe', label: 'Classe', valor: estadoCabecalho.classe },
+    { id: 'residencia', label: 'Residencia', valor: estadoCabecalho.residencia },
+    { id: 'idade', label: 'Idade', valor: estadoCabecalho.idade, type: 'number' },
+    { id: 'nomeJogador', label: 'Nome do Jogador', valor: estadoCabecalho.nomeJogador },
+    { id: 'dataNascimento', label: 'Nascimento', valor: estadoCabecalho.dataNascimento, type: 'date' },
   ];
 
   const grid = document.getElementById('cabecalho-campos');
@@ -119,6 +106,78 @@ function renderizarCabecalho(ficha) {
     grid.appendChild(wrapper);
   }
 }
+
+function normalizarCampoCabecalho(campo, valor) {
+  if (campo === 'idade') {
+    if (valor === '') return null;
+
+    const numero = Number.parseInt(valor, 10);
+    if (Number.isNaN(numero)) return null;
+    return Math.min(100, Math.max(-10, numero));
+  }
+
+  if (campo === 'dataNascimento') {
+    return valor || null;
+  }
+
+  const texto = String(valor ?? '').trim();
+
+  if (campo === 'nomePersonagem') {
+    return texto;
+  }
+
+  return texto || null;
+}
+
+function aplicarValorCabecalhoNoInput(input, valorNormalizado) {
+  if (valorNormalizado == null) {
+    input.value = '';
+    return;
+  }
+
+  input.value = String(valorNormalizado);
+}
+
+const enviarCampoCabecalho = debounce(async (input) => {
+  const campo = input.dataset.campoEstatico;
+  if (!campo) return;
+
+  const valorNormalizado = normalizarCampoCabecalho(campo, input.value);
+
+  if (campo === 'nomePersonagem' && !valorNormalizado) {
+    input.classList.add('error');
+    showToast('Nome do personagem e obrigatorio.', 'error');
+    aplicarValorCabecalhoNoInput(input, estadoCabecalho[campo]);
+    return;
+  }
+
+  if (estadoCabecalho[campo] === valorNormalizado) {
+    aplicarValorCabecalhoNoInput(input, valorNormalizado);
+    return;
+  }
+
+  input.classList.add('saving');
+  input.classList.remove('error');
+
+  try {
+    const payload = { [campo]: valorNormalizado };
+    const response = await apiFetch(`/fichas/${FICHA_ID}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+
+    const fichaAtualizada = response.data || {};
+    estadoCabecalho[campo] = fichaAtualizada[campo] ?? valorNormalizado;
+    aplicarValorCabecalhoNoInput(input, estadoCabecalho[campo]);
+    showToast('Cabecalho salvo com sucesso.', 'success');
+  } catch (err) {
+    input.classList.add('error');
+    aplicarValorCabecalhoNoInput(input, estadoCabecalho[campo]);
+    showToast(err.message || 'Erro ao salvar cabecalho.', 'error');
+  } finally {
+    input.classList.remove('saving');
+  }
+}, AUTOSAVE_DELAY_MS);
 
 function renderizarFicha(ficha) {
   for (const v of ficha.valoresCampo) {
@@ -251,7 +310,7 @@ const enviarValorNumerico = debounce(async (input, templateId) => {
   } finally {
     input.classList.remove('saving');
   }
-}, 500);
+}, AUTOSAVE_DELAY_MS);
 
 const enviarTexto = debounce(async (textarea, templateId) => {
   textarea.classList.add('saving');
@@ -266,9 +325,23 @@ const enviarTexto = debounce(async (textarea, templateId) => {
   } finally {
     textarea.classList.remove('saving');
   }
-}, 800);
+}, AUTOSAVE_DELAY_MS);
 
 function registrarEventListeners() {
+  document.getElementById('cabecalho-campos').addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.dataset.campoEstatico) {
+      enviarCampoCabecalho(el);
+    }
+  });
+
+  document.getElementById('cabecalho-campos').addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.dataset.campoEstatico) {
+      enviarCampoCabecalho(el);
+    }
+  });
+
   document.getElementById('secoes-dinamicas').addEventListener('input', (e) => {
     const el = e.target;
     const tipo = el.dataset.tipo;
@@ -354,18 +427,8 @@ function hideDiceChatStatus() {
   el.className = 'dice-chat-status hidden';
 }
 
-function formatChatTime(dateValue) {
-  return new Date(dateValue).toLocaleString('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    day: '2-digit',
-    month: '2-digit',
-  });
-}
-
-function buildRollSignature(rolls) {
-  return rolls.map((roll) => `${roll.id}:${roll.total}`).join('|');
-}
+const formatChatTime = dice.formatChatTime;
+const buildRollSignature = dice.buildRollSignature;
 
 function renderDiceChat(rolls) {
   const list = document.getElementById('dice-chat-list');
@@ -472,7 +535,7 @@ function iniciarPollingChat() {
 async function init() {
   if (!FICHA_ID) {
     alert('Nenhuma ficha selecionada. Redirecionando...');
-    window.location.href = 'login.html';
+    navigation.goTo('login');
     return;
   }
 

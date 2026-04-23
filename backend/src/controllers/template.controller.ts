@@ -5,6 +5,8 @@ import { recalcularFichaComValoresAtuais, validarFormula } from '../services/for
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 
+const NOMES_RESERVADOS_FORMULA = new Set(['SE', 'E', 'OU', 'round', 'if', 'and', 'or']);
+
 const templateSchema = z.object({
   nome: z
     .string()
@@ -18,6 +20,13 @@ const templateSchema = z.object({
   descricao: z.string().max(300).optional().nullable(),
   ordem: z.number().int().default(0),
 });
+
+function validarNomeReservado(nome: string | undefined): string | null {
+  if (!nome) return null;
+  return NOMES_RESERVADOS_FORMULA.has(nome)
+    ? `O nome "${nome}" e reservado pelo construtor de formulas. Escolha outro identificador.`
+    : null;
+}
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -141,6 +150,11 @@ export async function criarTemplate(
     }
 
     const dados = parse.data;
+    const erroNomeReservado = validarNomeReservado(dados.nome);
+    if (erroNomeReservado) {
+      res.status(400).json({ error: erroNomeReservado });
+      return;
+    }
 
     if (dados.tipo === TipoCampo.Calculado) {
       const erroFormula = await validarFormulaCalculada(dados.formulaLogica);
@@ -198,6 +212,11 @@ export async function atualizarTemplate(
         ? parse.data.formulaLogica
         : atual.formulaLogica,
     };
+    const erroNomeReservado = validarNomeReservado(parse.data.nome);
+    if (erroNomeReservado) {
+      res.status(400).json({ error: erroNomeReservado });
+      return;
+    }
 
     if (dadosAtualizados.tipo === TipoCampo.Calculado) {
       const erroFormula = await validarFormulaCalculada(dadosAtualizados.formulaLogica, id);
@@ -301,11 +320,17 @@ export async function desativarTemplate(
       return;
     }
 
-    await prisma.templateCampo.update({
-      where: { id },
-      data: { ativo: false },
+    await prisma.$transaction(async (tx) => {
+      await tx.valorCampo.deleteMany({
+        where: { templateId: id },
+      });
+
+      await tx.templateCampo.delete({
+        where: { id },
+      });
     });
-    res.json({ message: 'Template desativado. Valores existentes preservados.' });
+
+    res.json({ message: 'Template excluido definitivamente do banco.' });
   } catch (err: any) {
     if (err.code === 'P2025') {
       res.status(404).json({ error: 'Template nao encontrado.' });
