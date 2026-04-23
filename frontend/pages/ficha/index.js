@@ -14,6 +14,22 @@ const CATEGORIA_ICONES = {
   Status: '◉',
 };
 
+const CATEGORIA_ORDEM = [
+  'Caracteristica',
+  'Status',
+  'Habilidade',
+  'Lore',
+  'Inventario',
+];
+
+const CATEGORIA_TITULOS = {
+  Caracteristica: 'Caracteristicas',
+  Status: 'Status',
+  Habilidade: 'Habilidades',
+  Lore: 'Lore',
+  Inventario: 'Inventario',
+};
+
 const DICE_COUNTS = dice.DICE_COUNTS;
 const DICE_FACES = dice.DICE_FACES;
 
@@ -23,6 +39,7 @@ let latestChatSignature = '';
 let chatPollTimer = null;
 let currentChatRetentionDays = 2;
 let estadoCabecalho = {};
+const categoriasFechadas = {};
 const AUTOSAVE_DELAY_MS = 2000;
 
 function voltarPainel() {
@@ -180,6 +197,55 @@ const enviarCampoCabecalho = debounce(async (input) => {
 }, AUTOSAVE_DELAY_MS);
 
 function renderizarFicha(ficha) {
+  estadoValores = {};
+  for (const v of ficha.valoresCampo) {
+    estadoValores[v.templateId] = v;
+  }
+
+  const porCategoria = {};
+  for (const v of ficha.valoresCampo) {
+    const categoria = v.template.categoria;
+    if (!porCategoria[categoria]) porCategoria[categoria] = [];
+    porCategoria[categoria].push(v);
+  }
+
+  const container = document.getElementById('secoes-dinamicas');
+  container.innerHTML = '';
+
+  for (const categoria of CATEGORIA_ORDEM) {
+    const valores = porCategoria[categoria];
+    if (!valores?.length) continue;
+
+    const valoresOrdenados = [...valores].sort(ordenarCamposDaCategoria);
+    const secao = document.createElement('div');
+    secao.className = 'secao';
+
+    const temTextarea = valoresOrdenados.some((v) => v.template.tipo === 'Textarea');
+    const estaFechada = Boolean(categoriasFechadas[categoria]);
+
+    secao.innerHTML = `
+      <button type="button" class="secao-header${estaFechada ? ' collapsed' : ''}" data-categoria-toggle="${categoria}">
+        <span class="secao-header-main">
+          <span style="color: var(--sepia)">${CATEGORIA_ICONES[categoria] || '*'}</span>
+          <span class="secao-title">${CATEGORIA_TITULOS[categoria] || categoria}</span>
+        </span>
+        <span class="secao-toggle" aria-hidden="true">${estaFechada ? '>' : 'v'}</span>
+      </button>
+      <div class="secao-body ${temTextarea ? 'full-width' : ''}${estaFechada ? ' hidden' : ''}" id="secao-${categoria}">
+      </div>
+    `;
+
+    container.appendChild(secao);
+    const body = secao.querySelector(`#secao-${categoria}`);
+
+    for (const valor of valoresOrdenados) {
+      body.appendChild(criarCampo(valor));
+    }
+  }
+
+  return;
+
+  {
   for (const v of ficha.valoresCampo) {
     estadoValores[v.templateId] = v;
   }
@@ -216,11 +282,41 @@ function renderizarFicha(ficha) {
       body.appendChild(criarCampo(v));
     }
   }
+  }
+}
+
+function ordenarCamposDaCategoria(a, b) {
+  const aCheckbox = a.template.tipo === 'Checkbox';
+  const bCheckbox = b.template.tipo === 'Checkbox';
+
+  if (aCheckbox !== bCheckbox) {
+    return aCheckbox ? 1 : -1;
+  }
+
+  if (a.template.categoria === 'Habilidade' && b.template.categoria === 'Habilidade') {
+    const valorA = Number(a.valorBase ?? Number.NEGATIVE_INFINITY);
+    const valorB = Number(b.valorBase ?? Number.NEGATIVE_INFINITY);
+
+    if (valorA !== valorB) {
+      return valorB - valorA;
+    }
+  }
+
+  const ordemA = Number(a.template.ordem ?? Number.MAX_SAFE_INTEGER);
+  const ordemB = Number(b.template.ordem ?? Number.MAX_SAFE_INTEGER);
+
+  if (ordemA !== ordemB) {
+    return ordemA - ordemB;
+  }
+
+  return String(a.template.label || '').localeCompare(String(b.template.label || ''), 'pt-BR');
 }
 
 function criarCampo(valorCampo) {
   const { template } = valorCampo;
   const wrapper = document.createElement('div');
+  wrapper.className = 'campo-item';
+  if (template.tipo === 'Checkbox') wrapper.classList.add('checkbox-item');
   wrapper.setAttribute('data-template-id', template.id);
 
   const labelHtml = `
@@ -367,6 +463,28 @@ function registrarEventListeners() {
         showToast('Erro ao salvar.', 'error');
         el.checked = !el.checked;
       }
+    }
+  });
+
+  document.getElementById('secoes-dinamicas').addEventListener('click', (e) => {
+    const botao = e.target.closest('[data-categoria-toggle]');
+    if (!botao) return;
+
+    const categoria = botao.dataset.categoriaToggle;
+    if (!categoria) return;
+
+    categoriasFechadas[categoria] = !categoriasFechadas[categoria];
+
+    const body = document.getElementById(`secao-${categoria}`);
+    if (body) {
+      body.classList.toggle('hidden', categoriasFechadas[categoria]);
+    }
+
+    botao.classList.toggle('collapsed', categoriasFechadas[categoria]);
+
+    const seta = botao.querySelector('.secao-toggle');
+    if (seta) {
+      seta.textContent = categoriasFechadas[categoria] ? '>' : 'v';
     }
   });
 }

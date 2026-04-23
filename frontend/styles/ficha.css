@@ -156,10 +156,32 @@ header h1 {
 .secao-header {
   background: rgba(139, 105, 20, 0.1);
   border-bottom: 1px solid rgba(139, 105, 20, 0.2);
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  width: 100%;
   padding: 0.75rem 1.5rem;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+}
+
+.secao-header-main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.secao-toggle {
+  color: var(--sepia);
+  font-size: 1rem;
+  line-height: 1;
+  flex-shrink: 0;
 }
 
 .secao-title {
@@ -177,7 +199,12 @@ header h1 {
   gap: 1.25rem;
 }
 
+.secao-body.hidden { display: none; }
 .secao-body.full-width { grid-template-columns: 1fr; }
+
+.campo-item.checkbox-item {
+  order: 999;
+}
 
 .campo-label {
   font-family: 'Cinzel', serif;
